@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Path Intersections</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script type="text/javascript" src="/node_modules/paper/dist/paper-full.js"></script>
+    <script type="text/paperscript" canvas="canvas">
+        // Imported SVG Groups have their applyMatrix flag turned off by
+        // default. This is required for SVG importing to work correctly. Turn
+        // it on now, so we don't have to deal with nested coordinate spaces.
+        var words = project.importSVG(document.getElementById('svg'));
+        words.visible = true; // Turn off the effect of display:none;
+        words.fillColor = null;
+        words.strokeColor = 'black';
+        var guideGroup = words.children.guide;
+        var objGroup = words.children.obj;
+        // Resize the words to fit snugly inside the view:
+        words.fitBounds(view.bounds);
+        words.scale(0.8);
+        guideGroup.position = view.center;
+        objGroup.position = [350, 450];
+        placed = false;
+
+        function onMouseDown(event){
+        	placed = true;
+
+    	}
+
+        function onMouseMove(event) {
+        	temppos = objGroup.position;
+        	totalintersections = 0;
+        	if(!placed){
+            	objGroup.position = event.point;
+        	
+	            for (var i = 0; i < guideGroup.children.length; i++) {
+	                for (var j = 0; j < objGroup.children.length; j++) {
+	            		totalintersections += objGroup.children[j].getIntersections(guideGroup.children[i]).length;
+	                    showIntersections(objGroup.children[j], guideGroup.children[i])
+	                }
+	            }
+	            if(totalintersections < 1){            	
+	            	objGroup.position = temppos;
+	        	}
+        	}
+        }
+        function showIntersections(path1, path2) {
+            var intersections = path1.getIntersections(path2);
+            for (var i = 0; i < intersections.length; i++) {
+                new Path.Circle({
+                    center: intersections[i].point,
+                    radius: 5,
+                    fillColor: '#009dec'
+                }).removeOnMove();
+            }
+        }
+    </script>
+</head>
+<body>
+<canvas id="canvas" resize></canvas>
+<svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         height="600" width="600" id="svg" style="display:none">
+<g id="obj">
+     <path d="
+        M 100, 100
+        m -100, 0
+        a 75,75 0 1,0 150,0
+        a 75,75 0 1,0 -150,0
+    "/>
+	<path d="M0,100 l 150, 0"/>
+	<path d="M75,175 v-150"/>
+</g>
+<g id="guide">  
+	<path d="M600,350 v-500"
+        fill="none" stroke="red" stroke-width="5"  />
+	<path d="M600,350 l 500,200"
+        fill="none" stroke="red" stroke-width="5"  />
+	<path d="M100,550 l 500,-200"
+        fill="none" stroke="red" stroke-width="5"  />
+</g>
+</svg>
+</body>
+</html>
